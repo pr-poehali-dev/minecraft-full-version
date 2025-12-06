@@ -277,7 +277,7 @@ const Index = () => {
       const right = new THREE.Vector3();
       right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-      const moveSpeed = 0.1 * delta;
+      const moveSpeed = 0.05 * delta;
       
       if (keysPressed.current.has('w') || joystickRef.current.y > 0.3) {
         velocity.current.add(forward.clone().multiplyScalar(moveSpeed * Math.abs(joystickRef.current.y || 1)));
@@ -291,17 +291,54 @@ const Index = () => {
       if (keysPressed.current.has('d') || joystickRef.current.x > 0.3) {
         velocity.current.add(right.clone().multiplyScalar(moveSpeed * Math.abs(joystickRef.current.x || 1)));
       }
-      if (keysPressed.current.has(' ')) {
-        velocity.current.y += 0.3 * delta;
-      }
 
       velocity.current.y -= 0.02 * delta;
       velocity.current.multiplyScalar(0.9);
 
-      camera.position.add(velocity.current);
+      const newPosition = camera.position.clone().add(velocity.current);
       
-      if (camera.position.y < 5) {
-        camera.position.y = 5;
+      const playerBox = new THREE.Box3(
+        new THREE.Vector3(newPosition.x - 0.3, newPosition.y - 1.6, newPosition.z - 0.3),
+        new THREE.Vector3(newPosition.x + 0.3, newPosition.y + 0.2, newPosition.z + 0.3)
+      );
+
+      let collision = false;
+      let onGround = false;
+
+      for (const [key, mesh] of blockMeshes.current.entries()) {
+        const blockBox = new THREE.Box3().setFromObject(mesh);
+        
+        if (playerBox.intersectsBox(blockBox)) {
+          collision = true;
+          
+          const blockData = mesh.userData.block as Block;
+          const belowBox = new THREE.Box3(
+            new THREE.Vector3(newPosition.x - 0.3, newPosition.y - 1.7, newPosition.z - 0.3),
+            new THREE.Vector3(newPosition.x + 0.3, newPosition.y - 1.5, newPosition.z + 0.3)
+          );
+          
+          if (belowBox.intersectsBox(blockBox)) {
+            onGround = true;
+            newPosition.y = blockData.y + 1 + 1.6;
+            velocity.current.y = 0;
+          } else {
+            velocity.current.x *= -0.5;
+            velocity.current.z *= -0.5;
+          }
+          break;
+        }
+      }
+
+      if (!collision) {
+        camera.position.copy(newPosition);
+      }
+      
+      if (onGround && keysPressed.current.has(' ')) {
+        velocity.current.y = 0.15;
+      }
+
+      if (camera.position.y < 2) {
+        camera.position.y = 2;
         velocity.current.y = 0;
       }
 
