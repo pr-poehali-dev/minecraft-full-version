@@ -233,7 +233,7 @@ const Index = () => {
       const right = new THREE.Vector3();
       right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-      const moveSpeed = 0.2 * delta;
+      const moveSpeed = 0.02 * delta;
       
       if (keysPressed.current.has('w') || joystickRef.current.y > 0.3) {
         velocity.current.add(forward.clone().multiplyScalar(moveSpeed * Math.abs(joystickRef.current.y || 1)));
