@@ -53,7 +53,7 @@ const Index = () => {
   const touchStart = useRef({ x: 0, y: 0 });
   const joystickRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const sharedGeometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
+  const sharedGeometry = useMemo(() => new THREE.BoxGeometry(10, 10, 10), []);
   
   const materials = useMemo(() => ({
     grass: new THREE.MeshLambertMaterial({ color: 0x7CBF3A, flatShading: true }),
@@ -107,7 +107,7 @@ const Index = () => {
 
   const createBlock = (block: Block) => {
     const mesh = new THREE.Mesh(sharedGeometry, materials[block.type]);
-    mesh.position.set(block.x, block.y, block.z);
+    mesh.position.set(block.x * 10, block.y * 10, block.z * 10);
     mesh.userData = { block };
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();
@@ -125,7 +125,7 @@ const Index = () => {
     scene.background = new THREE.Color(0x87CEEB);
     scene.fog = new THREE.Fog(0x87CEEB, 0, RENDER_DISTANCE);
 
-    camera.position.set(0, 15, 15);
+    camera.position.set(0, 150, 150);
     camera.rotation.order = 'YXZ';
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
@@ -233,7 +233,7 @@ const Index = () => {
       const right = new THREE.Vector3();
       right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-      const moveSpeed = 0.02 * delta;
+      const moveSpeed = 0.2 * delta;
       
       if (keysPressed.current.has('w') || joystickRef.current.y > 0.3) {
         velocity.current.add(forward.clone().multiplyScalar(moveSpeed * Math.abs(joystickRef.current.y || 1)));
@@ -256,8 +256,8 @@ const Index = () => {
 
       camera.position.add(velocity.current);
       
-      if (camera.position.y < 10) {
-        camera.position.y = 10;
+      if (camera.position.y < 100) {
+        camera.position.y = 100;
         velocity.current.y = 0;
       }
 
