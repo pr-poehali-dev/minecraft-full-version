@@ -53,16 +53,60 @@ const Index = () => {
   const touchStart = useRef({ x: 0, y: 0 });
   const joystickRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const sharedGeometry = useMemo(() => new THREE.BoxGeometry(10, 10, 10), []);
+  const sharedGeometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
   
+  const createPixelTexture = (colors: string[]) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 8;
+    canvas.height = 8;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const index = Math.floor(Math.random() * colors.length);
+        ctx.fillStyle = colors[index];
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    return texture;
+  };
+
   const materials = useMemo(() => ({
-    grass: new THREE.MeshLambertMaterial({ color: 0x7CBF3A, flatShading: true }),
-    dirt: new THREE.MeshLambertMaterial({ color: 0x8B4513, flatShading: true }),
-    stone: new THREE.MeshLambertMaterial({ color: 0x808080, flatShading: true }),
-    wood: new THREE.MeshLambertMaterial({ color: 0x8B4513, flatShading: true }),
-    leaves: new THREE.MeshLambertMaterial({ color: 0x228B22, flatShading: true, transparent: true, opacity: 0.8 }),
-    coal_ore: new THREE.MeshLambertMaterial({ color: 0x343434, flatShading: true }),
-    iron_ore: new THREE.MeshLambertMaterial({ color: 0xD8AF93, flatShading: true }),
+    grass: new THREE.MeshLambertMaterial({ 
+      map: createPixelTexture(['#7CBF3A', '#6DAF2A', '#8CCF4A']), 
+      flatShading: true 
+    }),
+    dirt: new THREE.MeshLambertMaterial({ 
+      map: createPixelTexture(['#8B4513', '#7B3503', '#9B5523']), 
+      flatShading: true 
+    }),
+    stone: new THREE.MeshLambertMaterial({ 
+      map: createPixelTexture(['#808080', '#707070', '#909090']), 
+      flatShading: true 
+    }),
+    wood: new THREE.MeshLambertMaterial({ 
+      map: createPixelTexture(['#8B4513', '#6B3010', '#AB5520']), 
+      flatShading: true 
+    }),
+    leaves: new THREE.MeshLambertMaterial({ 
+      map: createPixelTexture(['#228B22', '#1A7B1A', '#2A9B2A']), 
+      flatShading: true, 
+      transparent: true, 
+      opacity: 0.8 
+    }),
+    coal_ore: new THREE.MeshLambertMaterial({ 
+      map: createPixelTexture(['#343434', '#505050', '#202020']), 
+      flatShading: true 
+    }),
+    iron_ore: new THREE.MeshLambertMaterial({ 
+      map: createPixelTexture(['#D8AF93', '#C89F83', '#E8BFA3']), 
+      flatShading: true 
+    }),
   }), []);
 
   const generateTerrain = () => {
@@ -107,7 +151,7 @@ const Index = () => {
 
   const createBlock = (block: Block) => {
     const mesh = new THREE.Mesh(sharedGeometry, materials[block.type]);
-    mesh.position.set(block.x * 10, block.y * 10, block.z * 10);
+    mesh.position.set(block.x, block.y, block.z);
     mesh.userData = { block };
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();
@@ -125,7 +169,7 @@ const Index = () => {
     scene.background = new THREE.Color(0x87CEEB);
     scene.fog = new THREE.Fog(0x87CEEB, 0, RENDER_DISTANCE);
 
-    camera.position.set(0, 150, 150);
+    camera.position.set(0, 15, 15);
     camera.rotation.order = 'YXZ';
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
@@ -233,7 +277,7 @@ const Index = () => {
       const right = new THREE.Vector3();
       right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-      const moveSpeed = 0.2 * delta;
+      const moveSpeed = 0.1 * delta;
       
       if (keysPressed.current.has('w') || joystickRef.current.y > 0.3) {
         velocity.current.add(forward.clone().multiplyScalar(moveSpeed * Math.abs(joystickRef.current.y || 1)));
@@ -256,8 +300,8 @@ const Index = () => {
 
       camera.position.add(velocity.current);
       
-      if (camera.position.y < 100) {
-        camera.position.y = 100;
+      if (camera.position.y < 5) {
+        camera.position.y = 5;
         velocity.current.y = 0;
       }
 
